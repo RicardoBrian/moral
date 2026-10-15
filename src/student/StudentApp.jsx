@@ -290,7 +290,7 @@ export default function StudentApp({ api, preview, onExitPreview }) {
         );
         break;
       case 'stageIntro':
-        screen = <StageIntroScreen set={set} stageIdx={game.stageIdx} character={game.character} nickname={game.nickname} onStart={startStage} />;
+        screen = <StageIntroScreen set={set} stageIdx={game.stageIdx} onStart={startStage} />;
         break;
       case 'dilemma':
       case 'feedback':

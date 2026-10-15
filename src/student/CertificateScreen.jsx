@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Avatar from '../components/Avatar.jsx';
 import Icon from '../components/Icon.jsx';
 import { Button, BottomCTA, Sheet } from '../components/ui.jsx';
 import { useI18n } from '../i18n/index.jsx';
@@ -23,57 +22,49 @@ export default function CertificateScreen({ set, session, game, scores, submitSt
 
       <article className="cert" aria-label={honor ? t('cert.honor') : t('cert.prov')}>
         <div className="cert-inner">
-          <header className="cert-head">
-            <div className={`cert-badge ${honor ? 'gold' : 'blue'}`} aria-hidden="true"><Icon name="globe" size={28} /></div>
-            <h1 className="cert-title">{honor ? t('cert.honor') : t('cert.prov')}</h1>
-            <p className="cert-sub">{t('cert.sub')}</p>
-          </header>
+          <p className="cert-no">{t('cert.no')} {certNo}</p>
+          <h1 className="cert-title">{honor ? t('cert.honor') : t('cert.prov')}</h1>
 
-          <div className="cert-person">
-            <Avatar character={game.character} size={88} />
-            <dl className="cert-fields">
-              <div><dt>{t('cert.name')}</dt><dd className="cert-name">{game.name}</dd></div>
-              <div><dt>{t('cert.studentId')}</dt><dd>{game.studentId}</dd></div>
-              <div><dt>{t('cert.nickname')}</dt><dd>{game.nickname}</dd></div>
-            </dl>
-          </div>
+          <dl className="cert-fields">
+            <div><dt>{t('cert.name')}</dt><dd className="cert-name">{game.name}</dd></div>
+            <div><dt>{t('cert.studentId')}</dt><dd>{game.studentId}</dd></div>
+            <div><dt>{t('cert.nickname')}</dt><dd>{game.nickname}</dd></div>
+          </dl>
 
           <p className="cert-body">
             {honor ? t('cert.bodyHonor', { set: L(set.title, lang) }) : t('cert.bodyProv', { set: L(set.title, lang) })}
           </p>
 
-          <div className="cert-scores">
-            {set.axes.map((a) => (
-              <div className="cert-score" key={a.id}>
-                <span>{L(a.name, lang)}</span>
-                <strong>{scores[a.id] ?? 0}</strong>
-              </div>
-            ))}
-            <div className="cert-score total">
-              <span>{t('result.total')}</span>
-              <strong>{total}</strong>
-            </div>
-          </div>
+          <table className="cert-scores">
+            <thead>
+              <tr>
+                {set.axes.map((a) => <th key={a.id}>{L(a.name, lang)}</th>)}
+                <th>{t('result.total')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {set.axes.map((a) => <td key={a.id}>{scores[a.id] ?? 0}</td>)}
+                <td className="total">{total}</td>
+              </tr>
+            </tbody>
+          </table>
 
           <section className="cert-promises">
             <h2>{t('cert.promises')}</h2>
-            <ul>
+            <ol>
               {set.stages.map((st) => (game.reflections[st.id] ? (
                 <li key={st.id}>
                   <span className="cert-promise-stage">{L(st.title, lang)}</span>
                   <span className="cert-promise-text">{game.reflections[st.id]}</span>
                 </li>
               ) : null))}
-            </ul>
+            </ol>
           </section>
 
           <footer className="cert-foot">
-            <div>
-              <p className="cert-date">{dateText}</p>
-              <p className="cert-issuer">{t('cert.issuer')}</p>
-              <p className="cert-no">{t('cert.no')} {certNo}</p>
-            </div>
-            <div className="cert-seal" aria-hidden="true"><span>CHRONOS</span></div>
+            <p className="cert-date">{dateText}</p>
+            <p className="cert-issuer">{t('cert.issuer')}</p>
           </footer>
         </div>
       </article>

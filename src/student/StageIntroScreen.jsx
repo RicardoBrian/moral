@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import Avatar from '../components/Avatar.jsx';
 import { Button, BottomCTA, WizardBubble, SpeakButton } from '../components/ui.jsx';
 import { useI18n } from '../i18n/index.jsx';
 import { L } from '../lib/localize.js';
@@ -19,26 +18,24 @@ export function WarpOverlay({ title }) {
   );
 }
 
-export default function StageIntroScreen({ set, stageIdx, character, nickname, onStart }) {
+export default function StageIntroScreen({ set, stageIdx, onStart }) {
   const { t, lang } = useI18n();
   const stage = set.stages[stageIdx];
   const year = L(stage.year, lang);
   const place = L(stage.place, lang);
-  const where = [year, place].filter(Boolean).join(lang === 'zh' ? '，' : ', ');
-  const wizardText = where ? t('stage.wizard', { where }) : '';
+  const wizardText = t('stage.wizard');
   const desc = L(stage.description, lang);
 
   return (
     <div className="screen screen-stage-intro">
-      <div className="stage-hero" style={{ '--stage': stage.color }}>
-        <span className="stage-pill">{t('stage.label', { n: stageIdx + 1, total: set.stages.length })}</span>
-        <h1 className="title-xl stage-hero-title">{L(stage.title, lang)}</h1>
-        {(year || place) ? <p className="stage-hero-meta">{[year, place].filter(Boolean).join(' · ')}</p> : null}
-        <div className="stage-hero-avatar"><Avatar character={character} size={84} /><span>{nickname}</span></div>
+      <div className="stage-head" style={{ '--stage': stage.color }}>
+        <p className="step-label"><span className="stage-dot" />{t('stage.label', { n: stageIdx + 1, total: set.stages.length })}</p>
+        <h1 className="title-xl">{L(stage.title, lang)}</h1>
+        {(year || place) ? <p className="desc">{[year, place].filter(Boolean).join(' · ')}</p> : null}
       </div>
 
       {desc ? (
-        <div className="card">
+        <div className="passage">
           <p className="body-lg">{desc}</p>
           <SpeakButton text={desc} />
         </div>

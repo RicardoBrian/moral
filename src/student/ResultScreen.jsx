@@ -32,26 +32,19 @@ export default function ResultScreen({ set, scores, nickname, submitState, onRet
 
   return (
     <div className={`screen screen-result ${honor ? 'is-honor' : 'is-prov'}`}>
-      <div className="result-hero">
-        <div className={`earth ${honor ? 'earth-good' : 'earth-bad'}`} aria-hidden="true">
-          <svg viewBox="0 0 120 120" width="120" height="120">
-            <circle cx="60" cy="60" r="52" fill={honor ? '#3182f6' : '#8b95a1'} />
-            <path d="M30 42c10-8 22-6 26 2s-6 12-2 20 14 4 16 14-8 16-18 14S30 80 28 70s-8-18 2-28Z" fill={honor ? '#15b886' : '#6b7684'} />
-            <path d="M74 28c8 0 18 6 20 14s-6 10-12 8-14-4-14-12 2-10 6-10Z" fill={honor ? '#15b886' : '#6b7684'} />
-          </svg>
-        </div>
-        <p className="eyebrow">{t('result.eyebrow')}</p>
+      <div className="screen-head">
         <h1 className="title-xl">{honor ? t('result.honorTitle') : t('result.provTitle')}</h1>
         <p className="desc">{honor ? t('result.honorDesc', { nickname }) : t('result.provDesc', { nickname })}</p>
       </div>
 
+      <div className="total-score">
+        <span className="total-score-label">{t('result.total')}</span>
+        <strong className="total-score-num">{total}</strong>
+      </div>
+
       <SubmitStatus state={submitState} onRetry={onRetry} />
 
-      <div className="card">
-        <div className="total-row">
-          <span>{t('result.total')}</span>
-          <strong>{total}</strong>
-        </div>
+      <div>
         <div className="axis-results">
           {set.axes.map((a) => {
             const v = scores[a.id] ?? 0;

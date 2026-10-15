@@ -82,7 +82,7 @@ const BASE = 'http://localhost:4173/';
       if (await decide.isDisabled()) throw new Error('이유를 썼는데 결정 불가');
       if (!dilemmaShot) { await shot('07-dilemma'); dilemmaShot = true; }
       await decide.click();
-      await page.locator('.result-card').waitFor();
+      await page.locator('.outcome').waitFor();
       if (stage === 0 && d === 0) await shot('08-feedback');
       const next = d < counts[stage] - 1 ? '다음 딜레마' : '성찰 쓰러 가기';
       await page.getByRole('button', { name: next }).click();
@@ -117,7 +117,7 @@ const BASE = 'http://localhost:4173/';
   }
 
   step('결과');
-  await page.getByText('시간 여행 결과').waitFor();
+  await page.locator('.total-score').waitFor();
   await page.getByText('체험 모드라서 이 기기에만 저장했어요.').waitFor({ timeout: 8000 });
   await shot('11-result');
   await page.getByRole('button', { name: '증명서 받기' }).click();

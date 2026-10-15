@@ -28,11 +28,11 @@ export function WizardAvatar({ size = 120, className = '' }) {
     <svg width={size} height={size} viewBox="0 0 200 200" className={`avatar ${className}`} aria-hidden="true">
       <defs>
         <linearGradient id={`cloak${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4f46e5" />
-          <stop offset="100%" stopColor="#312e81" />
+          <stop offset="0%" stopColor="#35557d" />
+          <stop offset="100%" stopColor="#243a57" />
         </linearGradient>
       </defs>
-      <circle cx="100" cy="100" r="96" fill="#eef0ff" />
+      <circle cx="100" cy="100" r="96" fill="#eef2f6" />
       <path d="M 50 196 Q 40 120 75 105 L 125 105 Q 160 120 150 196 Z" fill={`url(#cloak${uid})`} />
       <path d="M 75 105 Q 100 135 125 105 Q 100 120 75 105 Z" fill="#fbbf24" />
       <circle cx="100" cy="132" r="4" fill="#fbbf24" />
@@ -44,7 +44,7 @@ export function WizardAvatar({ size = 120, className = '' }) {
       <path d="M 106 80 Q 109 77 112 80" stroke={INK} strokeWidth="3" fill="none" strokeLinecap="round" />
       <ellipse cx="84" cy="90" rx="5" ry="3" fill="#f43f5e" opacity="0.25" />
       <ellipse cx="116" cy="90" rx="5" ry="3" fill="#f43f5e" opacity="0.25" />
-      <path d="M 58 72 Q 100 50 142 72 Q 100 66 58 72 Z" fill="#4338ca" />
+      <path d="M 58 72 Q 100 50 142 72 Q 100 66 58 72 Z" fill="#2c4566" />
       <path d="M 70 68 Q 98 6 136 12 Q 106 36 130 68 Z" fill={`url(#cloak${uid})`} />
       <circle cx="137" cy="12" r="7" fill="#fde047" />
       <rect x="156" y="72" width="6" height="118" rx="3" fill="#8b5a2b" />

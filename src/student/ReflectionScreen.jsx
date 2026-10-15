@@ -24,7 +24,7 @@ export default function ReflectionScreen({ set, stageIdx, answers, draft, onDraf
   return (
     <div className="screen screen-reflection">
       <div className="screen-head">
-        <p className="eyebrow">{t('reflect.eyebrow', { n: stageIdx + 1 })}</p>
+        <p className="step-label">{t('reflect.eyebrow', { n: stageIdx + 1 })}</p>
         <h1 className="title-lg">{title}</h1>
       </div>
 

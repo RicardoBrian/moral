@@ -77,7 +77,7 @@ export const STRINGS = {
     'intro.go': '시간 여행 시작',
 
     'stage.label': '스테이지 {n} / {total}',
-    'stage.wizard': '{where}. 이곳의 미래가 그대의 선택에 달려 있습니다.',
+    'stage.wizard': '이곳의 미래가 그대의 선택에 달려 있습니다.',
     'stage.start': '상황 살펴보기',
     'warp.title': '시간을 건너는 중',
     'warp.next': '다음 장면 · {title}',
@@ -231,7 +231,7 @@ export const STRINGS = {
     'intro.go': 'Start the journey',
 
     'stage.label': 'Stage {n} / {total}',
-    'stage.wizard': '{where}. The future of this place depends on your choices.',
+    'stage.wizard': 'The future of this place depends on your choices.',
     'stage.start': 'Look around',
     'warp.title': 'Traveling through time',
     'warp.next': 'Next scene · {title}',
@@ -385,7 +385,7 @@ export const STRINGS = {
     'intro.go': '开始时间旅行',
 
     'stage.label': '第{n}关 / 共{total}关',
-    'stage.wizard': '{where}。这里的未来取决于你的选择。',
+    'stage.wizard': '这里的未来取决于你的选择。',
     'stage.start': '看看情况',
     'warp.title': '正在穿越时间',
     'warp.next': '下一个场景 · {title}',
@@ -539,7 +539,7 @@ export const STRINGS = {
     'intro.go': 'Начать путешествие',
 
     'stage.label': 'Этап {n} из {total}',
-    'stage.wizard': '{where}. Будущее этого места зависит от твоего выбора.',
+    'stage.wizard': 'Будущее этого места зависит от твоего выбора.',
     'stage.start': 'Осмотреться',
     'warp.title': 'Перемещение во времени',
     'warp.next': 'Следующая сцена · {title}',

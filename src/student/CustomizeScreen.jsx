@@ -36,7 +36,6 @@ export default function CustomizeScreen({ initial, onDone }) {
   return (
     <div className="screen screen-customize">
       <div className="screen-head">
-        <p className="eyebrow">{t('custom.eyebrow')}</p>
         <h1 className="title-lg">{t('custom.title')}</h1>
       </div>
 

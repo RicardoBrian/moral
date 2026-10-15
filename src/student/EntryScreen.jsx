@@ -61,7 +61,6 @@ export default function EntryScreen({ api, onEntered }) {
   return (
     <form className="screen screen-entry" onSubmit={submit} noValidate>
       <div className="screen-head">
-        <p className="eyebrow">{t('entry.eyebrow')}</p>
         <h1 className="title-xl">{t('entry.title')}</h1>
         <p className="desc">{t('entry.desc')}</p>
       </div>

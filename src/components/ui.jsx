@@ -218,6 +218,8 @@ export function CheckedTextArea({ id, label, value, onChange, min, placeholder, 
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
+        // 휴대폰 키보드가 올라올 때 하단 버튼에 가리지 않도록 입력칸을 화면 가운데로 올립니다.
+        onFocus={(e) => { const el = e.target; setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250); }}
         maxLength={1000}
       />
       <div className="check-row">
