@@ -72,7 +72,7 @@ const SHOTS = process.env.SHOTS || require('os').tmpdir();
 
   step('결과 탭');
   await page.goto(`${BASE}#/teacher/results`);
-  await page.getByRole('cell', { name: 'Иван' }).waitFor({ timeout: 15000 });
+  await page.getByRole('cell', { name: 'Иван' }).first().waitFor({ timeout: 15000 });
 
   step('로그아웃 후 다시 잠김');
   await page.getByRole('button', { name: '로그아웃' }).click();

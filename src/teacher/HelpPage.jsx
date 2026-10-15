@@ -19,7 +19,7 @@ export default function HelpPage({ api }) {
           <li>함수 목록에서 <b>setup</b>을 고르고 <b>실행</b>을 눌러요. 권한 요청이 나오면 허용해 주세요.</li>
           <li>실행 로그에 나온 <b>연결 키(GAS_KEY)</b>를 복사해 두세요.</li>
           <li><b>배포 → 새 배포 → 유형: 웹 앱</b>을 고르고, <b>실행 사용자: 나</b>, <b>액세스 권한: 모든 사용자</b>로 배포한 뒤 <b>웹 앱 URL</b>을 복사해요.</li>
-          <li>Cloudflare Pages 프로젝트의 <b>Settings → Variables and Secrets</b>에 <code>ADMIN_PASSWORD</code>(이 화면 비밀번호, Secret), <code>GAS_KEY</code>(연결 키, Secret), <code>GAS_URL</code>(웹 앱 URL)을 넣고 다시 배포해요.</li>
+          <li>Cloudflare 프로젝트의 <b>Settings → Variables and Secrets</b>에 <code>ADMIN_PASSWORD</code>(이 화면 비밀번호, Secret), <code>GAS_KEY</code>(연결 키, Secret), <code>GAS_URL</code>(웹 앱 URL)을 넣고 다시 배포해요.</li>
         </ol>
         <p className="t-muted t-small">관리자 비밀번호는 Cloudflare 비밀키에만 저장돼요. 바꾸려면 Cloudflare 에서 <code>ADMIN_PASSWORD</code>를 고치고 다시 배포하면 돼요. Code.gs 를 고친 뒤에는 Apps Script 에서 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해야 반영돼요.</p>
       </section>

@@ -24,7 +24,9 @@ src/            웹 게임 (React + Vite)
   student/      학생 화면
   teacher/      교사 화면 (주소 뒤에 #/teacher)
   data/         기본 문제집과 문제집 구조
-functions/api.js     Cloudflare Pages Function (비밀번호 확인 · Apps Script 전달)
+functions/api.js     /api: 비밀번호 확인 · Apps Script 전달 (Pages Function)
+worker/index.js      Workers 로 배포할 때의 진입점 (같은 /api 코드 사용)
+wrangler.jsonc       Cloudflare 배포 설정
 apps-script/    구글 드라이브 저장용 서버 (Google Apps Script)
 tests/          자동 테스트
 ```
@@ -55,23 +57,28 @@ Cloudflare 설정이 없으면(개발 중 등) **로컬 체험 모드**로 동�
 
 `Code.gs` 를 고친 뒤에는 **배포 관리 → 수정 → 새 버전**으로 다시 배포해야 반영됩니다. (URL 은 그대로)
 
-## 2. Cloudflare Pages 배포
+## 2. Cloudflare 배포
 
-1. Cloudflare 대시보드 → **Workers & Pages → Create → Pages → Connect to Git** 에서 이 저장소를 고릅니다.
-2. 빌드 설정
-   - Framework preset: **None** (또는 Vite)
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-3. **Settings → Variables and Secrets** 에 세 가지를 넣습니다. (Production)
+저장소에 `wrangler.jsonc` 가 있어서, Cloudflare 가 **배포할 때 자동으로 `npm run build` 를 실행하고 `dist` 를 올립니다.**
+
+1. Cloudflare 대시보드 → **Workers & Pages → Create → Import a repository** 에서 이 저장소를 고릅니다.
+   - 프로젝트 이름: `moral` (다른 이름을 쓰려면 `wrangler.jsonc` 의 `name` 도 같게 바꿔 주세요)
+   - Production branch: `main`
+   - Build command: 비워 두기 (또는 `npm run build`)
+   - Deploy command: `npx wrangler deploy` (기본값)
+2. 프로젝트 **Settings → Variables and Secrets** 에 세 가지를 넣습니다.
 
    | 이름 | 종류 | 값 |
    |---|---|---|
    | `ADMIN_PASSWORD` | **Secret** | 교사 화면 비밀번호 (원하는 값) |
    | `GAS_KEY` | **Secret** | setup 로그에 나온 연결 키 |
-   | `GAS_URL` | Text 또는 Secret | Apps Script 웹 앱 URL (`…/exec`) |
+   | `GAS_URL` | Text | Apps Script 웹 앱 URL (`…/exec`) |
 
-4. 값을 넣은 뒤 **Deployments → 최신 배포 → Retry deployment** 로 한 번 다시 배포합니다. (변수는 새 배포부터 적용)
-5. 학생 주소: `https://<프로젝트>.pages.dev/`, 교사 주소: 같은 주소 뒤에 `#/teacher`
+3. 값을 넣은 뒤 **Deployments 에서 다시 배포**합니다.
+4. 학생 주소: `https://moral.<계정>.workers.dev/`, 교사 주소: 같은 주소 뒤에 `#/teacher`
+
+> Pages 프로젝트로 만든 경우: Build command `npm run build`, Build output directory `dist` 로 설정하면 `functions/api.js` 가 `/api` 로 동작합니다. 변수 설정은 같습니다.
+> 화면이 하얗고 콘솔에 `MIME type of "text/jsx"` 오류가 보이면 빌드 없이 원본이 올라간 것입니다. 위 빌드 설정을 확인해 주세요.
 
 비밀번호를 바꾸려면 Cloudflare 에서 `ADMIN_PASSWORD` 값을 고치고 다시 배포하면 됩니다.
 변수를 넣기 전에는 사이트가 **로컬 체험 모드**(수업 코드 `DEMO`)로 열립니다.
@@ -100,5 +107,5 @@ npm run build
 
 `tests/gas-mock.js` 는 드라이브·시트·번역을 흉내 내어 `Code.gs` 를 실제 구글 없이 테스트하고,
 `tests/worker.test.js` 는 Cloudflare `/api` → Apps Script 전체 경로를 검사합니다.
-Cloudflare 함수까지 로컬에서 띄워 보려면: `npm run build && npx wrangler pages dev dist` (환경 변수는 `.dev.vars` 파일에).
+Cloudflare 까지 로컬에서 띄워 보려면: `npx wrangler dev` (환경 변수는 `.dev.vars` 파일에).
 브라우저 흐름 테스트(`tests/e2e/`)는 Playwright 가 필요합니다: `npm run build && npm run preview -- --port 4173` 실행 후 `NODE_PATH=$(npm root -g) node tests/e2e/student.cjs`.
