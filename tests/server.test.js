@@ -5,12 +5,16 @@ import { DEFAULT_SET } from '../src/data/defaultSet.js';
 import { normalizeSet } from '../src/data/setModel.js';
 import { buildPayload } from '../src/student/submission.js';
 
+// Cloudflare 가 붙여 주는 값(연결 키, 관리자 확인 표시)을 흉내 냅니다.
 function setupServer() {
   const g = createGas();
   g.ctx.setup();
-  const pw = g.props.ADMIN_PASSWORD;
-  const admin = (action, data = {}) => g.post({ action, password: pw, ...data });
-  return { g, pw, admin };
+  const key = g.props.GAS_KEY;
+  const raw = g.post;
+  g.post = (body) => raw({ key, ...body });
+  g.raw = raw;
+  const admin = (action, data = {}) => g.post({ action, admin: true, ...data });
+  return { g, key, admin };
 }
 
 function playAll(set, pick) {
@@ -38,7 +42,8 @@ function makePayload(session, set, studentId, name, lang = 'ko', extra = {}) {
 test('setup 이 폴더·DB·비밀번호를 만든다', () => {
   const { g } = setupServer();
   assert.ok(g.props.ROOT_ID && g.props.DB_ID && g.props.SETS_ID);
-  assert.equal(g.props.ADMIN_PASSWORD.length, 8);
+  assert.equal(g.props.GAS_KEY.length, 40);
+  assert.equal(g.props.ADMIN_PASSWORD, undefined, '비밀번호는 Apps Script 에 두지 않음');
   // 두 번 실행해도 같은 폴더를 재사용
   const root = g.props.ROOT_ID;
   g.ctx.setup();
@@ -52,10 +57,13 @@ test('setup 전에는 SETUP_REQUIRED', () => {
   assert.equal(r.error, 'SETUP_REQUIRED');
 });
 
-test('관리자 비밀번호 검사', () => {
-  const { g, admin } = setupServer();
-  assert.equal(g.post({ action: 'listSets', password: 'wrong' }).error, 'UNAUTHORIZED');
-  assert.equal(admin('login').ok, true);
+test('연결 키가 없거나 틀리면 거절, 관리자 표시 없으면 관리자 기능 거절', () => {
+  const { g, admin, key } = setupServer();
+  assert.equal(g.raw({ action: 'getSession', code: 'X' }).error, 'FORBIDDEN');
+  assert.equal(g.raw({ action: 'listSets', admin: true, key: 'x'.repeat(40) }).error, 'FORBIDDEN');
+  assert.equal(g.raw({ action: 'listSets', admin: true, key: key.slice(1) }).error, 'FORBIDDEN');
+  assert.equal(g.post({ action: 'listSets' }).error, 'UNAUTHORIZED');
+  assert.equal(admin('listSets').ok, true);
   assert.equal(g.post({ action: 'nope' }).error, 'UNKNOWN_ACTION');
 });
 
@@ -157,7 +165,7 @@ test('결과 제출: PDF·반 폴더·요약 시트·중복 방지·번역', () 
   assert.equal(all[0].setTitle, '미래를 구하는 세계시민');
   admin('deleteSession', { code: sess.code });
   assert.equal(admin('listSubmissions').result.length, 3);
-  assert.equal(g.post({ action: 'listSubmissions' }).error, 'UNAUTHORIZED');
+  assert.equal(g.post({ action: 'listSubmissions' }).error, 'UNAUTHORIZED', '관리자 표시 없이는 결과를 볼 수 없음');
 });
 
 test('종료된 수업·삭제된 수업에도 늦은 제출은 받아 준다 (결과 유실 방지)', () => {

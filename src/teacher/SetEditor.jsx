@@ -8,7 +8,7 @@ import { randomId } from '../lib/rand.js';
 import { DEFAULT_SET } from '../data/defaultSet.js';
 import {
   AXIS_COLORS, LIMITS, blankSet, blankStage, blankDilemma, blankChoice,
-  normalizeSet, validateSet, countMissingTranslations,
+  normalizeSet, validateSet, countMissingTranslations, walkTexts,
 } from '../data/setModel.js';
 import { errorText } from './tutils.js';
 import { Toast } from './SessionsPage.jsx';
@@ -125,10 +125,18 @@ export default function SetEditor({ api, setId, onAuthError }) {
     if (api.mode === 'local') { setToast('자동 번역은 Google Apps Script 서버를 연결한 뒤에 쓸 수 있어요.'); return; }
     setTranslating(true);
     try {
-      const r = await api.translateSet(normalizeSet(set), onlyMissing);
+      // 한 번에 다 못 끝내면(서버가 80초마다 끊어서 돌려줌) 남은 칸을 이어서 번역합니다.
+      // ‘전체 다시 번역’은 기존 번역을 비운 뒤 빈 칸 번역과 같은 방식으로 처리합니다.
+      const start = normalizeSet(set);
+      if (!onlyMissing) walkTexts(start, (f) => { f.en = ''; f.zh = ''; f.ru = ''; });
+      let r = await api.translateSet(start, true);
+      for (let round = 0; r.partial && round < 8; round++) {
+        setSet(r.set);
+        r = await api.translateSet(r.set, true);
+      }
       setSet(r.set);
       setDirty(true);
-      if (r.partial) setToast(`시간이 오래 걸려 ${r.done}칸만 번역했어요. ‘빈 칸 자동 번역’을 한 번 더 눌러 주세요.`);
+      if (r.partial) setToast('번역이 아직 남았어요. ‘빈 칸 자동 번역’을 한 번 더 눌러 주세요.');
       else if (r.total && r.done < r.total) setToast(`${r.total - r.done}칸은 번역하지 못했어요. 다시 시도하거나 직접 입력해 주세요.`);
       else setToast('번역을 채웠어요. 내용을 확인한 뒤 저장해 주세요.');
     } catch (e) {

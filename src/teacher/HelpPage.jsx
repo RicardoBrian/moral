@@ -12,16 +12,16 @@ export default function HelpPage({ api }) {
       </div>
 
       <section className="t-card">
-        <h2 className="t-h2">1. 구글 드라이브 연결하기 (처음 한 번)</h2>
+        <h2 className="t-h2">1. 구글 드라이브 · Cloudflare 연결하기 (처음 한 번)</h2>
         <ol className="t-steps">
           <li><a href="https://script.google.com" target="_blank" rel="noreferrer">script.google.com</a> 에 결과를 받을 구글 계정으로 들어가 <b>새 프로젝트</b>를 만들어요.</li>
           <li>저장소의 <code>apps-script/Code.gs</code> 내용을 모두 복사해 편집기의 <code>Code.gs</code>에 붙여 넣고 저장해요.</li>
-          <li>편집기 위쪽 함수 목록에서 <b>setup</b>을 고르고 <b>실행</b>을 눌러요. 권한 요청이 나오면 허용해 주세요.</li>
-          <li>실행 로그에 나온 <b>관리자 비밀번호</b>를 적어 두세요. 바꾸고 싶으면 <b>프로젝트 설정 → 스크립트 속성</b>에서 <code>ADMIN_PASSWORD</code> 값을 고치면 돼요.</li>
-          <li><b>배포 → 새 배포 → 유형: 웹 앱</b>을 고르고, <b>실행 사용자: 나</b>, <b>액세스 권한: 모든 사용자</b>로 배포해요.</li>
-          <li>나온 <b>웹 앱 URL</b>을 이 사이트의 <code>config.json</code> 파일 <code>apiUrl</code> 에 붙여 넣어요. (GitHub 저장소의 <code>public/config.json</code>)</li>
+          <li>함수 목록에서 <b>setup</b>을 고르고 <b>실행</b>을 눌러요. 권한 요청이 나오면 허용해 주세요.</li>
+          <li>실행 로그에 나온 <b>연결 키(GAS_KEY)</b>를 복사해 두세요.</li>
+          <li><b>배포 → 새 배포 → 유형: 웹 앱</b>을 고르고, <b>실행 사용자: 나</b>, <b>액세스 권한: 모든 사용자</b>로 배포한 뒤 <b>웹 앱 URL</b>을 복사해요.</li>
+          <li>Cloudflare Pages 프로젝트의 <b>Settings → Variables and Secrets</b>에 <code>ADMIN_PASSWORD</code>(이 화면 비밀번호, Secret), <code>GAS_KEY</code>(연결 키, Secret), <code>GAS_URL</code>(웹 앱 URL)을 넣고 다시 배포해요.</li>
         </ol>
-        <p className="t-muted t-small">Code.gs 를 고친 뒤에는 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해야 반영돼요. URL은 그대로 유지돼요.</p>
+        <p className="t-muted t-small">관리자 비밀번호는 Cloudflare 비밀키에만 저장돼요. 바꾸려면 Cloudflare 에서 <code>ADMIN_PASSWORD</code>를 고치고 다시 배포하면 돼요. Code.gs 를 고친 뒤에는 Apps Script 에서 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해야 반영돼요.</p>
       </section>
 
       <section className="t-card">

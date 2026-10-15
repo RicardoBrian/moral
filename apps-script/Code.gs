@@ -1,12 +1,16 @@
 /**
  * 시간 여행 도덕 수업 — Google Apps Script 서버
  *
- * 설치 방법 (자세한 내용은 README 의 "구글 드라이브 연결하기")
+ * 이 스크립트는 Cloudflare(사이트의 /api)를 통해서만 호출됩니다.
+ * 관리자 비밀번호는 Cloudflare 비밀키(ADMIN_PASSWORD)에만 있고, 여기에는 없습니다.
+ * Cloudflare 와 이 스크립트는 연결 키(GAS_KEY)를 나눠 갖고, 키가 맞는 요청만 처리합니다.
+ *
+ * 설치 방법 (자세한 내용은 README)
  *  1. script.google.com 에서 새 프로젝트를 만들고 이 파일 내용을 Code.gs 에 붙여 넣습니다.
  *  2. 함수 목록에서 setup 을 골라 실행합니다. (처음 한 번, 권한 허용)
- *     → 실행 로그에 관리자 비밀번호가 표시됩니다.
+ *     → 실행 로그에 연결 키(GAS_KEY)가 표시됩니다.
  *  3. 배포 → 새 배포 → 웹 앱 / 실행 사용자: 나 / 액세스 권한: 모든 사용자
- *  4. 웹 앱 URL 을 사이트의 config.json 의 apiUrl 에 넣습니다.
+ *  4. Cloudflare Pages 설정에 GAS_URL(웹 앱 URL), GAS_KEY(연결 키), ADMIN_PASSWORD(관리자 비밀번호)를 넣습니다.
  */
 
 var ROOT_FOLDER_NAME = '시간여행 도덕수업 결과';
@@ -49,15 +53,14 @@ function setup() {
   var first = db.getSheetByName('Sheet1') || db.getSheetByName('시트1');
   if (first && db.getSheets().length > 1) db.deleteSheet(first);
 
-  var pw = props.getProperty('ADMIN_PASSWORD');
-  if (!pw) {
-    pw = randomString_(8);
-    props.setProperty('ADMIN_PASSWORD', pw);
+  var key = props.getProperty('GAS_KEY');
+  if (!key) {
+    key = randomString_(40);
+    props.setProperty('GAS_KEY', key);
   }
   Logger.log('설정이 끝났어요.');
   Logger.log('결과 폴더: ' + root.getUrl());
-  Logger.log('관리자 비밀번호: ' + pw);
-  Logger.log('비밀번호를 바꾸려면 [프로젝트 설정 → 스크립트 속성]에서 ADMIN_PASSWORD 값을 고치세요.');
+  Logger.log('Cloudflare 에 넣을 연결 키(GAS_KEY): ' + key);
   Logger.log('이제 [배포 → 새 배포 → 웹 앱]으로 배포해 주세요. (실행 사용자: 나 / 액세스 권한: 모든 사용자)');
 }
 
@@ -79,11 +82,13 @@ function doPost(e) {
     var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var action = String(body.action || '');
     if (!isReady_()) throw apiError_('SETUP_REQUIRED');
+    checkKey_(body.key);
     var result;
     if (PUBLIC_ACTIONS.hasOwnProperty(action)) {
       result = PUBLIC_ACTIONS[action](body);
     } else if (ADMIN_ACTIONS.hasOwnProperty(action)) {
-      checkPassword_(body.password);
+      // 관리자 비밀번호는 Cloudflare 가 확인하고, 확인된 요청에만 admin 표시를 붙여 보냅니다.
+      if (body.admin !== true) throw apiError_('UNAUTHORIZED');
       result = ADMIN_ACTIONS[action](body);
     } else {
       throw apiError_('UNKNOWN_ACTION');
@@ -122,8 +127,6 @@ var PUBLIC_ACTIONS = {
 };
 
 var ADMIN_ACTIONS = {
-  login: function () { return { ok: true }; },
-
   listSets: function () {
     var out = [];
     var it = setsFolder_().getFiles();
@@ -520,8 +523,9 @@ function translateSet_(set, onlyMissing) {
     ['en', 'zh', 'ru'].forEach(function (l) {
       if (onlyMissing && f[l] && String(f[l]).trim()) return;
       total++;
-      // Apps Script 는 한 번에 6분까지만 실행되므로 5분이 지나면 멈추고 지금까지 한 것만 돌려줍니다.
-      if (Date.now() - started > 5 * 60 * 1000) { partial = true; return; }
+      // 한 번의 요청이 너무 길어지지 않도록 80초가 지나면 멈추고 지금까지 한 것만 돌려줍니다.
+      // (화면에서 남은 칸을 이어서 자동으로 다시 요청합니다)
+      if (Date.now() - started > 80 * 1000) { partial = true; return; }
       var out = cachedTranslate_(String(f.ko), 'ko', TRANSLATE_CODE[l]);
       if (out) { f[l] = out; done++; }
     });
@@ -535,15 +539,16 @@ function translateSet_(set, onlyMissing) {
 
 function isReady_() {
   var p = PropertiesService.getScriptProperties();
-  return !!(p.getProperty('DB_ID') && p.getProperty('SETS_ID') && p.getProperty('ROOT_ID') && p.getProperty('ADMIN_PASSWORD'));
+  return !!(p.getProperty('DB_ID') && p.getProperty('SETS_ID') && p.getProperty('ROOT_ID') && p.getProperty('GAS_KEY'));
 }
 
-function checkPassword_(pw) {
-  var real = PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD');
-  if (!pw || String(pw) !== String(real)) {
-    Utilities.sleep(800);
-    throw apiError_('UNAUTHORIZED');
-  }
+/** Cloudflare 를 거치지 않은 요청(연결 키가 없거나 틀림)은 거절합니다. */
+function checkKey_(key) {
+  var real = PropertiesService.getScriptProperties().getProperty('GAS_KEY');
+  if (!key || !real || String(key).length !== real.length) throw apiError_('FORBIDDEN');
+  var diff = 0;
+  for (var i = 0; i < real.length; i++) diff |= real.charCodeAt(i) ^ String(key).charCodeAt(i);
+  if (diff !== 0) throw apiError_('FORBIDDEN');
 }
 
 function rootFolder_() { return DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('ROOT_ID')); }

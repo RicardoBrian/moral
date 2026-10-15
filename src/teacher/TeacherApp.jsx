@@ -33,7 +33,7 @@ function Login({ api, onDone }) {
   return (
     <form className="t-login" onSubmit={submit}>
       <h1 className="title-lg">교사용 화면</h1>
-      <p className="desc">Apps Script 의 setup 함수를 실행할 때 정한 관리자 비밀번호를 입력해 주세요.</p>
+      <p className="desc">Cloudflare 에 ADMIN_PASSWORD 로 넣어 둔 관리자 비밀번호를 입력해 주세요.</p>
       <TextField id="t-pw" type="password" label="관리자 비밀번호" value={pw} onChange={(e) => setPw(e.target.value)} error={err} autoComplete="current-password" />
       <Button block loading={loading} onClick={submit}>들어가기</Button>
       <button type="submit" hidden aria-hidden="true" tabIndex={-1} />

@@ -141,7 +141,7 @@ async function quickPlay(page, code, sid, name) {
 
   step('사용 안내');
   await page.goto(`${BASE}#/teacher/help`);
-  await page.getByText('구글 드라이브 연결하기').waitFor();
+  await page.getByText('구글 드라이브 · Cloudflare 연결하기').waitFor();
 
   if (errors.length) { console.log('ERRORS:\n' + errors.join('\n')); process.exitCode = 1; }
   else console.log('콘솔 오류 없음');

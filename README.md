@@ -24,33 +24,57 @@ src/            웹 게임 (React + Vite)
   student/      학생 화면
   teacher/      교사 화면 (주소 뒤에 #/teacher)
   data/         기본 문제집과 문제집 구조
+functions/api.js     Cloudflare Pages Function (비밀번호 확인 · Apps Script 전달)
 apps-script/    구글 드라이브 저장용 서버 (Google Apps Script)
-public/config.json   서버 주소 설정
 tests/          자동 테스트
 ```
 
-서버 주소(`public/config.json`의 `apiUrl`)가 비어 있으면 **로컬 체험 모드**로 동작합니다. 이 모드에서는 데이터가 브라우저에만 저장되고, 수업 코드 `DEMO`로 들어갈 수 있습니다.
+Cloudflare 설정이 없으면(개발 중 등) **로컬 체험 모드**로 동작합니다. 이 모드에서는 데이터가 브라우저에만 저장되고, 수업 코드 `DEMO`로 들어갈 수 있습니다.
 
-## 1. 사이트 배포 (GitHub Pages)
+## 배포 구조
 
-1. 이 저장소의 **Settings → Pages → Source** 를 **GitHub Actions** 로 바꿉니다.
-2. `main` 브랜치에 올리면 자동으로 테스트 → 빌드 → 배포됩니다.
-3. 학생 주소: `https://<계정>.github.io/<저장소>/`, 교사 주소: 같은 주소 뒤에 `#/teacher`
+```
+학생·교사 브라우저 ──► Cloudflare Pages (사이트 + /api)
+                         │  · 교사 비밀번호 확인 (Cloudflare 비밀키 ADMIN_PASSWORD)
+                         │  · 연결 키 GAS_KEY 를 붙여 전달
+                         ▼
+                    Google Apps Script ──► 선생님 구글 드라이브 (PDF · 요약 시트)
+```
 
-## 2. 구글 드라이브 연결 (처음 한 번)
+- 관리자 비밀번호는 **Cloudflare 비밀키에만** 있습니다. 저장소나 Apps Script 에는 없습니다.
+- Apps Script 는 연결 키가 맞는 요청(= Cloudflare 를 거친 요청)만 처리합니다.
+
+## 1. 구글 드라이브 준비 (Apps Script, 처음 한 번)
 
 1. 결과를 받을 구글 계정으로 [script.google.com](https://script.google.com) 에서 **새 프로젝트**를 만듭니다.
 2. `apps-script/Code.gs` 내용을 편집기의 `Code.gs` 에 붙여 넣고 저장합니다.
 3. 함수 목록에서 **setup** 을 고르고 **실행** → 권한을 허용합니다.
-   실행 로그에 **관리자 비밀번호**가 나옵니다. (바꾸려면 프로젝트 설정 → 스크립트 속성 → `ADMIN_PASSWORD`)
-4. **배포 → 새 배포 → 웹 앱**, 실행 사용자 **나**, 액세스 권한 **모든 사용자** 로 배포합니다.
-5. 나온 웹 앱 URL 을 `public/config.json` 에 넣고 `main` 에 올립니다.
-   ```json
-   { "apiUrl": "https://script.google.com/macros/s/....../exec" }
-   ```
-6. 교사 화면에 처음 들어가면 기본 문제집이 자동으로 올라갑니다.
+   ("확인되지 않은 앱" 경고가 나오면 **고급 → 프로젝트로 이동**)
+4. 실행 로그에 나온 **연결 키(GAS_KEY)** 를 복사해 둡니다.
+5. **배포 → 새 배포 → 웹 앱**, 실행 사용자 **나**, 액세스 권한 **모든 사용자** 로 배포하고 **웹 앱 URL** 을 복사합니다.
 
-`Code.gs` 를 고친 뒤에는 **배포 관리 → 수정 → 새 버전**으로 다시 배포해야 반영됩니다. 이때 URL 은 바뀌지 않습니다.
+`Code.gs` 를 고친 뒤에는 **배포 관리 → 수정 → 새 버전**으로 다시 배포해야 반영됩니다. (URL 은 그대로)
+
+## 2. Cloudflare Pages 배포
+
+1. Cloudflare 대시보드 → **Workers & Pages → Create → Pages → Connect to Git** 에서 이 저장소를 고릅니다.
+2. 빌드 설정
+   - Framework preset: **None** (또는 Vite)
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+3. **Settings → Variables and Secrets** 에 세 가지를 넣습니다. (Production)
+
+   | 이름 | 종류 | 값 |
+   |---|---|---|
+   | `ADMIN_PASSWORD` | **Secret** | 교사 화면 비밀번호 (원하는 값) |
+   | `GAS_KEY` | **Secret** | setup 로그에 나온 연결 키 |
+   | `GAS_URL` | Text 또는 Secret | Apps Script 웹 앱 URL (`…/exec`) |
+
+4. 값을 넣은 뒤 **Deployments → 최신 배포 → Retry deployment** 로 한 번 다시 배포합니다. (변수는 새 배포부터 적용)
+5. 학생 주소: `https://<프로젝트>.pages.dev/`, 교사 주소: 같은 주소 뒤에 `#/teacher`
+
+비밀번호를 바꾸려면 Cloudflare 에서 `ADMIN_PASSWORD` 값을 고치고 다시 배포하면 됩니다.
+변수를 넣기 전에는 사이트가 **로컬 체험 모드**(수업 코드 `DEMO`)로 열립니다.
 
 ### 결과가 저장되는 곳
 
@@ -74,5 +98,7 @@ npm test         # 로직 + 서버(Apps Script) 테스트
 npm run build
 ```
 
-`tests/gas-mock.js` 는 드라이브·시트·번역을 흉내 내어 `Code.gs` 를 실제 구글 없이 테스트합니다.
+`tests/gas-mock.js` 는 드라이브·시트·번역을 흉내 내어 `Code.gs` 를 실제 구글 없이 테스트하고,
+`tests/worker.test.js` 는 Cloudflare `/api` → Apps Script 전체 경로를 검사합니다.
+Cloudflare 함수까지 로컬에서 띄워 보려면: `npm run build && npx wrangler pages dev dist` (환경 변수는 `.dev.vars` 파일에).
 브라우저 흐름 테스트(`tests/e2e/`)는 Playwright 가 필요합니다: `npm run build && npm run preview -- --port 4173` 실행 후 `NODE_PATH=$(npm root -g) node tests/e2e/student.cjs`.

@@ -33,7 +33,7 @@ async function post(url, body, { timeout = 30000, retries = 0 } = {}) {
       clearTimeout(timer);
       lastErr = e instanceof ApiError ? e : new ApiError(e && e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK');
       // 서버가 명확히 거절한 경우(코드 없음, 비밀번호 틀림 등)는 다시 시도하지 않습니다.
-      const retryable = ['NETWORK', 'TIMEOUT', 'BAD_RESPONSE', 'BUSY'].includes(lastErr.code);
+      const retryable = ['NETWORK', 'TIMEOUT', 'BAD_RESPONSE', 'BUSY', 'UPSTREAM_UNREACHABLE'].includes(lastErr.code);
       if (!retryable || attempt === retries) break;
       await new Promise((r) => setTimeout(r, 1200 * Math.pow(2, attempt) + Math.random() * 800));
     }
@@ -67,7 +67,7 @@ export function createRemoteApi(url) {
     saveSet: async (set) => normalizeSet(await admin('saveSet', { set })),
     deleteSet: (id) => admin('deleteSet', { id }),
     translateSet: async (set, onlyMissing) => {
-      const r = await admin('translateSet', { set, onlyMissing }, { timeout: 330000 });
+      const r = await admin('translateSet', { set, onlyMissing }, { timeout: 150000 });
       return { set: normalizeSet(r.set), partial: !!r.partial, total: r.total, done: r.done };
     },
     listSessions: () => admin('listSessions'),
