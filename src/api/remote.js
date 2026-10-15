@@ -75,5 +75,6 @@ export function createRemoteApi(url) {
     updateSession: (code, patch) => admin('updateSession', { code, patch }),
     deleteSession: (code) => admin('deleteSession', { code }),
     dashboard: (code) => admin('dashboard', { code }, { timeout: 45000 }),
+    listSubmissions: () => admin('listSubmissions', {}, { timeout: 60000 }),
   };
 }

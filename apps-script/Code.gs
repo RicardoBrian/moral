@@ -229,20 +229,31 @@ var ADMIN_ACTIONS = {
     var code = normalizeCode_(b.code);
     var sess = findSession_(code);
     if (!sess) throw apiError_('NOT_FOUND');
-    var subs = [];
-    readRows_('submissions').forEach(function (r) {
-      if (r.code !== code) return;
-      var rec = parseJson_(r.json);
-      if (!rec) return;
-      rec.submittedAt = r.submittedAt;
-      rec.pdfUrl = r.pdfUrl;
-      rec.fileName = r.fileName;
-      subs.push(rec);
-    });
+    var subs = readSubmissions_(function (r) { return r.code === code; });
     var progress = readRows_('progress').filter(function (r) { return r.code === code; });
     return { session: sess, submissions: subs, progress: progress };
   },
+
+  /** 모든 수업의 제출물 (삭제한 수업 포함). 최신 제출이 먼저 옵니다. */
+  listSubmissions: function () {
+    return readSubmissions_(function () { return true; })
+      .sort(function (a, b) { return String(b.submittedAt).localeCompare(String(a.submittedAt)); });
+  },
 };
+
+function readSubmissions_(filter) {
+  var out = [];
+  readRows_('submissions').forEach(function (r) {
+    if (!filter(r)) return;
+    var rec = parseJson_(r.json);
+    if (!rec) return;
+    rec.submittedAt = r.submittedAt;
+    rec.pdfUrl = r.pdfUrl;
+    rec.fileName = r.fileName;
+    out.push(rec);
+  });
+  return out;
+}
 
 // =====================================================================
 // 결과 제출

@@ -72,6 +72,32 @@ async function quickPlay(page, code, sid, name) {
   await page.getByRole('radio', { name: '성찰 모아보기' }).click();
   await page.getByText('앞으로 다른 사람의 입장을').first().waitFor();
 
+  step('현황판에서 학생 결과 상세 보기');
+  await page.getByRole('radio', { name: '학생 현황' }).click();
+  await page.getByRole('cell', { name: '홍길동' }).click();
+  const panel = page.getByRole('dialog', { name: '홍길동 학생 결과' });
+  await panel.waitFor();
+  await panel.getByText('친구들과 함께 살기 위해서').first().waitFor();
+  await panel.getByText('앞으로 다른 사람의 입장을 먼저 생각하겠습니다.').first().waitFor();
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `${SHOTS}/t8-result-panel.png` });
+  await page.getByRole('button', { name: '다음 학생' }).click();
+  await page.getByRole('dialog', { name: '김영희 학생 결과' }).waitFor();
+  await page.keyboard.press('Escape');
+  if (await page.getByRole('dialog').count()) throw new Error('Esc 로 닫히지 않음');
+
+  step('결과 탭');
+  await page.goto(`${BASE}#/teacher/results`);
+  await page.getByText('결과 보기').first().waitFor();
+  const before = await page.locator('.t-table-click tbody tr').count();
+  await page.fill('input[placeholder="예) 홍길동, 30215"]', '김영희');
+  const after = await page.locator('.t-table-click tbody tr').count();
+  if (!(before >= 2 && after === 1)) throw new Error(`검색 결과 이상: ${before} → ${after}`);
+  await page.locator('.t-table-click tbody tr').first().click();
+  await page.getByRole('dialog', { name: '김영희 학생 결과' }).waitFor();
+  await page.screenshot({ path: `${SHOTS}/t9-results.png` });
+  await page.getByRole('button', { name: '닫기' }).click();
+
   step('문제집 편집');
   await page.goto(`${BASE}#/teacher/sets`);
   await page.getByRole('button', { name: '편집' }).first().click();

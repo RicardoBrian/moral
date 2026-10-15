@@ -9,6 +9,7 @@ import DashboardPage from './DashboardPage.jsx';
 import SetsPage from './SetsPage.jsx';
 import SetEditor from './SetEditor.jsx';
 import HelpPage from './HelpPage.jsx';
+import ResultsPage from './ResultsPage.jsx';
 
 function Login({ api, onDone }) {
   const [pw, setPw] = useState('');
@@ -43,6 +44,7 @@ function Login({ api, onDone }) {
 
 const TABS = [
   { path: '/teacher', label: '수업' },
+  { path: '/teacher/results', label: '결과' },
   { path: '/teacher/sets', label: '문제집' },
   { path: '/teacher/help', label: '사용 안내' },
 ];
@@ -73,6 +75,9 @@ export default function TeacherApp({ api }) {
     page = <SetsPage api={api} onAuthError={onAuthError} />;
   } else if (parts[1] === 'dash' && parts[2]) {
     page = <DashboardPage key={parts[2]} api={api} code={decodeURIComponent(parts[2])} onAuthError={onAuthError} />;
+  } else if (parts[1] === 'results') {
+    activeTab = '/teacher/results';
+    page = <ResultsPage api={api} onAuthError={onAuthError} />;
   } else if (parts[1] === 'help') {
     activeTab = '/teacher/help';
     page = <HelpPage api={api} />;

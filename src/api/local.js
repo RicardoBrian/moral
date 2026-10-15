@@ -155,5 +155,10 @@ export function createLocalApi() {
         progress: loadJSON(K.prog, []).filter((p) => p.code === code),
       };
     },
+
+    async listSubmissions() {
+      await wait();
+      return loadJSON(K.subs, []).slice().sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+    },
   };
 }

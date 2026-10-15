@@ -149,6 +149,15 @@ test('결과 제출: PDF·반 폴더·요약 시트·중복 방지·번역', () 
   assert.equal(ru.reflections[0].textKo, ru.reflections[0].text, '한국어 성찰은 번역하지 않음');
   assert.equal(typeof ru.submittedAt, 'string');
   assert.ok(ru.pdfUrl.startsWith('https://drive/file/'));
+
+  // 결과 탭: 모든 수업의 제출물, 최신순, 수업을 지워도 남음
+  const all = admin('listSubmissions').result;
+  assert.equal(all.length, 3);
+  assert.ok(String(all[0].submittedAt) >= String(all[2].submittedAt));
+  assert.equal(all[0].setTitle, '미래를 구하는 세계시민');
+  admin('deleteSession', { code: sess.code });
+  assert.equal(admin('listSubmissions').result.length, 3);
+  assert.equal(g.post({ action: 'listSubmissions' }).error, 'UNAUTHORIZED');
 });
 
 test('종료된 수업·삭제된 수업에도 늦은 제출은 받아 준다 (결과 유실 방지)', () => {

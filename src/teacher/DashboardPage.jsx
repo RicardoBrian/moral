@@ -5,6 +5,7 @@ import { L } from '../lib/localize.js';
 import { navigate } from '../lib/router.js';
 import { fmtDate, errorText, downloadFile, safeFileName } from './tutils.js';
 import { Toast } from './SessionsPage.jsx';
+import ResultPanel from './ResultPanel.jsx';
 
 const STEP_LABEL = { start: '시작', stage1: '1단계 완료', stage2: '2단계 완료', stage3: '3단계 완료', stage4: '4단계 완료', stage5: '5단계 완료' };
 const classKey = (r) => `${r.grade}-${r.classNo}`;
@@ -31,6 +32,7 @@ export default function DashboardPage({ api, code, onAuthError }) {
   const [updatedAt, setUpdatedAt] = useState(null);
   const [open, setOpen] = useState({});
   const [toast, setToast] = useState('');
+  const [detail, setDetail] = useState(-1);
   const busy = useRef(false);
 
   const load = useCallback(async () => {
@@ -55,11 +57,12 @@ export default function DashboardPage({ api, code, onAuthError }) {
 
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 결과 창을 보는 동안에는 자동 새로고침을 멈춰 화면이 바뀌지 않게 합니다.
   useEffect(() => {
-    if (!auto) return undefined;
+    if (!auto || detail >= 0) return undefined;
     const t = setInterval(() => { if (!document.hidden) load(); }, 20000);
     return () => clearInterval(t);
-  }, [auto, load]);
+  }, [auto, load, detail]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -88,9 +91,10 @@ export default function DashboardPage({ api, code, onAuthError }) {
     const classes = [...new Set([...students.values()].map(classKey))].sort();
     const inClass = (r) => cls === 'all' || classKey(r) === cls;
     const list = [...students.values()].filter(inClass).sort((a, b) => String(a.studentId).localeCompare(String(b.studentId)));
-    const subs = allSubs.filter(inClass);
+    const subs = allSubs.filter(inClass).sort((a, b) => String(a.studentId).localeCompare(String(b.studentId)));
+    const everySub = (data.submissions || []).filter(inClass);
     const avg = subs.length ? Math.round(subs.reduce((n, s) => n + (Number(s.total) || 0), 0) / subs.length) : 0;
-    return { list, subs, classes, avg, honor: subs.filter((s) => s.honorary === true || s.honorary === 'TRUE').length };
+    return { list, subs, everySub, classes, avg, honor: subs.filter((s) => s.honorary === true || s.honorary === 'TRUE').length };
   }, [data, cls]);
 
   // 딜레마별 선택 분포 (문제집이 있으면 아무도 고르지 않은 선택지도 0%로 보여 줌)
@@ -144,6 +148,11 @@ export default function DashboardPage({ api, code, onAuthError }) {
     downloadFile(`${safeFileName(code)}_결과.csv`, `﻿${lines.join('\n')}`, 'text/csv');
   };
 
+  const openStudent = (studentId) => {
+    const i = view ? view.subs.findIndex((x) => x.studentId === studentId) : -1;
+    if (i >= 0) setDetail(i);
+  };
+
   if (!data && !error) return <div className="t-page"><Spinner label="불러오는 중…" /></div>;
 
   const session = data && data.session;
@@ -195,12 +204,19 @@ export default function DashboardPage({ api, code, onAuthError }) {
 
           {tab === 'students' ? (
             <div className="t-table-wrap">
+              {view.subs.length ? <p className="t-muted t-small t-table-hint">제출한 학생을 누르면 선택한 이유와 성찰을 자세히 볼 수 있어요.</p> : null}
               {view.list.length === 0 ? <p className="t-empty">아직 들어온 학생이 없어요.</p> : (
                 <table className="t-table">
-                  <thead><tr><th>학번</th><th>이름</th><th>닉네임</th><th>상태</th><th>종합</th><th>등급</th><th>시각</th><th>PDF</th></tr></thead>
+                  <thead><tr><th>학번</th><th>이름</th><th>닉네임</th><th>상태</th><th>종합</th><th>등급</th><th>시각</th><th /></tr></thead>
                   <tbody>
                     {view.list.map((r) => (
-                      <tr key={r.studentId}>
+                      <tr
+                        key={r.studentId}
+                        className={r.status === 'done' ? 't-row-click' : ''}
+                        onClick={r.status === 'done' ? () => openStudent(r.studentId) : undefined}
+                        tabIndex={r.status === 'done' ? 0 : undefined}
+                        onKeyDown={r.status === 'done' ? (e) => { if (e.key === 'Enter') openStudent(r.studentId); } : undefined}
+                      >
                         <td>{r.studentId}</td>
                         <td>{r.name}</td>
                         <td>{r.nickname}</td>
@@ -208,7 +224,7 @@ export default function DashboardPage({ api, code, onAuthError }) {
                         <td>{r.status === 'done' ? r.total : '-'}</td>
                         <td>{r.status === 'done' ? (r.honorary === true || r.honorary === 'TRUE' ? '명예' : '예비') : '-'}</td>
                         <td>{fmtDate(r.at)}</td>
-                        <td>{r.pdfUrl ? <a href={r.pdfUrl} target="_blank" rel="noreferrer">열기</a> : '-'}</td>
+                        <td>{r.status === 'done' ? <span className="t-td-open">결과 보기 <Icon name="chevronRight" size={16} /></span> : '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -239,7 +255,7 @@ export default function DashboardPage({ api, code, onAuthError }) {
                               <ul className="t-reasons">
                                 {c.picks.length === 0 ? <li className="t-muted">이 선택을 한 학생이 없어요.</li> : c.picks.map((p) => (
                                   <li key={p.studentId}>
-                                    <strong>{p.studentId} {p.name}</strong>
+                                    <button type="button" className="t-name-link" onClick={() => openStudent(p.studentId)}>{p.studentId} {p.name}</button>
                                     <span>{p.reasonKo || p.reason}</span>
                                     {p.reasonKo && p.reasonKo !== p.reason ? <em className="t-orig">원문: {p.reason}</em> : null}
                                   </li>
@@ -265,7 +281,7 @@ export default function DashboardPage({ api, code, onAuthError }) {
                   <ul className="t-reasons">
                     {g.items.map((it) => (
                       <li key={it.studentId}>
-                        <strong>{it.studentId} {it.name}</strong>
+                        <button type="button" className="t-name-link" onClick={() => openStudent(it.studentId)}>{it.studentId} {it.name}</button>
                         <span>{it.textKo || it.text}</span>
                         {it.textKo && it.textKo !== it.text ? <em className="t-orig">원문: {it.text}</em> : null}
                       </li>
@@ -276,6 +292,9 @@ export default function DashboardPage({ api, code, onAuthError }) {
             </div>
           ) : null}
         </>
+      ) : null}
+      {detail >= 0 && view && view.subs[detail] ? (
+        <ResultPanel list={view.subs} index={detail} onIndex={setDetail} onClose={() => setDetail(-1)} allSubs={view.everySub} />
       ) : null}
       <Toast msg={toast} />
     </div>
